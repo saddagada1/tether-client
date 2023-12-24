@@ -3,6 +3,11 @@ import "../styles/globals.css";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Theme } from "@/components/theme";
 import Layout from "@/components/layout";
+import { Toaster } from "sonner";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Provider } from "react-redux";
+import { store } from "@/lib/redux/store";
+import IsAuth from "@/components/isAuth";
 
 const sans = Inter({
   weight: "variable",
@@ -16,6 +21,8 @@ const mono = JetBrains_Mono({
   variable: "--font-mono",
 });
 
+const queryClient = new QueryClient();
+
 const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <>
@@ -26,9 +33,16 @@ const MyApp: AppType = ({ Component, pageProps }) => {
         }
       `}</style>
       <Theme attribute="class" defaultTheme="dark">
-        <Layout>
-          <Component {...pageProps} />
-        </Layout>
+        <Provider store={store}>
+          <QueryClientProvider client={queryClient}>
+            <Toaster position="top-right" />
+            <Layout>
+              <IsAuth>
+                <Component {...pageProps} />
+              </IsAuth>
+            </Layout>
+          </QueryClientProvider>
+        </Provider>
       </Theme>
     </>
   );

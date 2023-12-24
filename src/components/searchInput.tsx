@@ -45,12 +45,12 @@ const SearchInput: React.FC<SearchInputProps> = ({ ...FormHTMLAtrributes }) => {
             <FormItem className="flex items-center space-y-0">
               <FormControl>
                 <>
-                  <div className="flex aspect-square h-11 items-center justify-center rounded-es-md rounded-ss-md bg-foreground text-background">
+                  <div className="flex h-11 items-center justify-center border-b pl-2">
                     <MagnifyingGlassIcon className="h-5 w-5" />
                   </div>
                   <Input
                     placeholder="Search for something...anything"
-                    className="h-11 rounded-es-none rounded-ss-none"
+                    className="h-11 rounded-none border-x-0 border-t-0"
                     {...field}
                   />
                 </>

@@ -16,6 +16,10 @@ import { Button, ButtonLoading } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { ArrowLeftIcon } from "@radix-ui/react-icons";
+import { checkIfApiError, trimmedString } from "@/lib/utils";
+import { useRegisterUser } from "@/api/authentication-controller/authentication-controller";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { setAuthState } from "@/lib/redux/slices/authSlice";
 
 const formSchema = z
   .object({
@@ -23,6 +27,7 @@ const formSchema = z
     username: z
       .string()
       .min(4, { message: "Min 4 Chars Required" })
+      .regex(/^[A-Za-z0-9_]*$/, "Only A-Z, 0-9 & _")
       .max(15, { message: "Max 15 Chars Allowed" }),
     password: z.string().min(8, { message: "Min 8 Chars Required" }),
     confirmPassword: z.string(),
@@ -34,6 +39,8 @@ const formSchema = z
 
 const SignUpForm: React.FC = () => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const { mutateAsync: register } = useRegisterUser();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -45,36 +52,39 @@ const SignUpForm: React.FC = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    // try {
-    //   const response = await signUp({
-    //     email: calcTrimmedString(values.email),
-    //     password: values.password,
-    //   });
-    //   if (!response.user) {
-    //     form.setError("email", {
-    //       type: "manual",
-    //       message: response.error.message,
-    //     });
-    //     return;
-    //   }
-    //   await signIn("credentials", {
-    //     redirect: false,
-    //     email: values.email,
-    //     password: values.password,
-    //   });
-    //   void router.replace("/");
-    // } catch (error) {
-    //   if (error instanceof TRPCClientError) {
-    //     toast.error(`Error: ${error.message}`);
-    //   }
-    //   return;
-    // }
+    try {
+      const response = await register({
+        data: {
+          email: trimmedString(values.email),
+          username: trimmedString(values.username),
+          password: values.password,
+        },
+      });
+      dispatch(
+        setAuthState({
+          status: "authenticated",
+          credentials: {
+            accessToken: response.data.accessToken,
+            expiresAt: Date.parse(response.data.expiresAt),
+            user: response.data.user,
+          },
+        }),
+      );
+      void router.push("/");
+    } catch (error) {
+      const apiError = checkIfApiError(error);
+      if (!!apiError) {
+        form.setError(apiError.subject as "email" | "username", {
+          message: apiError.message,
+        });
+      }
+      return;
+    }
   };
 
   return (
     <Form {...form}>
       <form
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onSubmit={form.handleSubmit(onSubmit)}
         className="w-full max-w-[400px] space-y-8"
       >

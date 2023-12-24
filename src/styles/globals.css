@@ -76,6 +76,15 @@
 }
 
 @layer components {
+  .pad-x {
+    @apply px-6 hr:px-8;
+  }
+  .logo {
+    @apply text-5xl font-bold leading-none tracking-tight text-destructive;
+  }
+  .title {
+    @apply text-3xl font-bold leading-none tracking-tight hr:text-4xl;
+  }
   .h1 {
     @apply text-2xl font-bold leading-none tracking-tight hr:text-3xl;
   }

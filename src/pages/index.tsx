@@ -1,28 +1,38 @@
-import HeroGrid from "@/components/heroGrid";
-import HomeReveal from "@/components/homeReveal";
-import { Button } from "@/components/ui/button";
+import { shuffle } from "@/lib/utils";
 import { type NextPage } from "next";
 import Head from "next/head";
-import Link from "next/link";
+import { useState } from "react";
+import { Masonry } from "react-plock";
 
 const Home: NextPage = () => {
+  const [images] = useState(
+    shuffle(Array.from({ length: 15 }).map((_, i) => `hero-${i + 1}.jpg`)),
+  );
   return (
     <>
       <Head>
         <title>Tether</title>
       </Head>
-      <main className="relative">
-        <HeroGrid />
-        <div className="absolute right-0 top-0 flex p-2 hr:gap-4 hr:p-8">
-          <Button variant="link" asChild>
-            <Link href="/sign-up">Sign Up</Link>
-          </Button>
-          <Button variant="link" asChild>
-            <Link href="/login">Login</Link>
-          </Button>
-        </div>
+      <main className="pad-x">
+        <Masonry
+          className=""
+          items={images}
+          config={{
+            columns: [2, 3, 5],
+            gap: [4, 8, 16],
+            media: [640, 768, 1024],
+          }}
+          render={(image, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={i}
+              src={`/media/${image}`}
+              alt={`hero-${i + 1}`}
+              className="h-auto w-full"
+            />
+          )}
+        />
       </main>
-      <HomeReveal />
     </>
   );
 };

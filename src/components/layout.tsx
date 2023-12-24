@@ -1,13 +1,11 @@
 import Head from "next/head";
 import Navbar from "./navbar";
-import { useRouter } from "next/router";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const router = useRouter();
   return (
     <>
       <Head>
@@ -18,7 +16,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="max-w-screen max-h-screen font-sans">
-        {/* <Navbar /> */}
+        <Navbar />
         {children}
       </div>
     </>

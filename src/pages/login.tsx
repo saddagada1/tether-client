@@ -16,64 +16,76 @@ import { useRouter } from "next/router";
 import { ButtonLoading, Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeftIcon } from "@radix-ui/react-icons";
+import { useLoginUser } from "@/api/authentication-controller/authentication-controller";
+import { checkIfApiError, trimmedString } from "@/lib/utils";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { setAuthState } from "@/lib/redux/slices/authSlice";
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Invalid Email" }),
+  emailOrUsername: z.string().min(1, { message: "Required" }),
   password: z.string().min(1, { message: "Required" }),
 });
 
 const LoginForm: React.FC = () => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const { mutateAsync: login } = useLoginUser();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      emailOrUsername: "",
       password: "",
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    // const response = await signIn("credentials", {
-    //   redirect: false,
-    //   email: values.email,
-    //   password: values.password,
-    // });
-    // if (response?.ok) {
-    //   if (
-    //     router.query.callbackUrl &&
-    //     typeof router.query.callbackUrl === "string"
-    //   ) {
-    //     void router.push(router.query.callbackUrl);
-    //   } else {
-    //     void router.push("/");
-    //   }
-    // } else {
-    //   form.setError("email", {
-    //     type: "manual",
-    //     message: response?.error as string | undefined,
-    //   });
-    // }
+    try {
+      const response = await login({
+        data: {
+          principal: trimmedString(values.emailOrUsername),
+          password: values.password,
+        },
+      });
+      dispatch(
+        setAuthState({
+          status: "authenticated",
+          credentials: {
+            accessToken: response.data.accessToken,
+            expiresAt: Date.parse(response.data.expiresAt),
+            user: response.data.user,
+          },
+        }),
+      );
+      void router.push("/");
+    } catch (error) {
+      const apiError = checkIfApiError(error);
+      if (!!apiError) {
+        form.setError(apiError.subject as "emailOrUsername", {
+          message: apiError.message,
+        });
+      }
+      return;
+    }
   };
 
   return (
     <Form {...form}>
       <form
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onSubmit={form.handleSubmit(onSubmit)}
         className="w-full max-w-[400px] text-right"
       >
         <FormField
           control={form.control}
-          name="email"
+          name="emailOrUsername"
           render={({ field }) => (
             <FormItem className="mb-8">
               <div className="flex justify-between">
-                <FormLabel>Email</FormLabel>
+                <FormLabel>Email or Username</FormLabel>
                 <FormMessage />
               </div>
               <FormControl>
-                <Input placeholder="sloopy@acme.ca" {...field} type="email" />
+                <Input placeholder="sloopy@acme.ca" {...field} />
               </FormControl>
             </FormItem>
           )}
